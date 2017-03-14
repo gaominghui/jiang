@@ -85,7 +85,7 @@ def jiang2(src,k):
     
     
 
-
+'''
 def ran():
 
     list=[]
@@ -113,7 +113,7 @@ def ran():
             count+=1
         print ran_str+"\t"+kaijianghaoma[i].strip()
         print count
-        
+'''     
     
     
 if __name__ == '__main__':

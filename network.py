@@ -15,10 +15,13 @@ import random
 
 # Third-party libraries
 import numpy as np
+import xlrd
+import xlwt
+import time
 
 class Network(object):
 
-    def __init__(self, sizes):
+    def __init__(self, sizes,data_):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -31,6 +34,7 @@ class Network(object):
         ever used in computing the outputs from later layers."""
         self.num_layers = len(sizes)
         self.sizes = sizes
+        self.data_=data_
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
@@ -54,17 +58,15 @@ class Network(object):
         if test_data: n_test = len(test_data)
         n = len(training_data)
         for j in xrange(epochs):
-            'random.shuffle(training_data)'
-            mini_batches = [
-                training_data[k:k+mini_batch_size]
+            random.shuffle(training_data)
+            mini_batches = [training_data[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
-            if test_data:
+            if test_data and j ==epochs-1:
                 print "Epoch {0}: {1} / {2}".format(
-                    j, self.evaluate_gao(test_data), n_test)
-            else:
-                print "Epoch {0} complete".format(j)
+#                    j, self.evaluate_gao(test_data), n_test)
+                    j, self.evaluate_gao(test_data,mini_batch_size,eta), n_test)
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -131,12 +133,12 @@ class Network(object):
         return sum(int(x == y) for (x, y) in test_results)
     
     
-    def evaluate_gao(self, test_data):
+    def evaluate_gao(self, test_data,mini_batch_size,eta):
         """Return the number of test inputs for which the neural
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
-        
+        f = open("/Users/gaominghui/git/jiang_log/"+self.data_+"/log.txt",'a')
         arr=[(self.feedforward(x), y)
                         for (x, y) in test_data]
         
@@ -159,15 +161,58 @@ class Network(object):
                 if y[i]>0:
                     y_set.add(i)
 
+            #str_+=",".join(str(ele) for ele in result_set)+":"+",".join(str(ele) for ele in y_set)
+            #print str_
+            #print len(result_set&y_set)
+            if(len(y_set)==0):
+                f.write("structure:"+",".join( str(ele) for ele in self.sizes)+";"+"mini_batch_size:"+str(mini_batch_size)+";"+"eta:"+str(eta)+">"+",".join(str(ele) for ele in result_set)+"\n")
+                f.flush()
+                f.close()
+            if(len(result_set&y_set)>=3):
+                count+=1
+        return  count
+    
+
+
+
+    def evaluate_lanqiu(self, test_data):
+        """Return the number of test inputs for which the neural
+        network outputs the correct result. Note that the neural
+        network's output is assumed to be the index of whichever
+        neuron in the final layer has the highest activation."""
+        
+        arr=[(self.feedforward(x), y)
+                        for (x, y) in test_data]
+        
+        count=0
+        for (x,y )in arr:
+            str_=""
+            arr_temp=[]
+            for i in range(len(x)):
+                arr_temp.append((x[i][0],i))
+                
+            arr_temp.sort(lambda x,y:cmp(x[0],y[0]), reverse=True)
+            
+      
+           
+            result_set=set()
+            y_set=set()
+            for i in range(1):
+                result_set.add(arr_temp[i][1]);
+            for i in range(17):
+                if y[i]>0:
+                    y_set.add(i)
+
             str_+=str(result_set)+":"+str(y_set)
             print str_
             print len(result_set&y_set)
             if(len(result_set&y_set)>=4):
                 count+=1
-            
         return  count
     
-
+    
+    
+    
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
         \partial a for the output activations."""
@@ -181,3 +226,4 @@ def sigmoid(z):
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
+

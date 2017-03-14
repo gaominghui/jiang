@@ -2,7 +2,10 @@
 import urllib2
 import re
 import http.cookiejar
-
+import os
+import xlrd
+import xlwt
+import time
 def getHtml(url):
     cj=http.cookiejar.CookieJar()
     opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -14,30 +17,68 @@ def getHtml(url):
     html_string = html_bytes.decode( 'utf-8' )
     return html_string
 
-#url = http://zst.aicai.com/ssq/openInfo/
-#最终输出结果格式如：2015075期开奖号码：6,11,13,19,21,32, 蓝球：4
-html = getHtml("http://zst.aicai.com/ssq/openInfo/")
-#<table class="fzTab nbt"> </table>
 
-table = html[html.find('<table class="fzTab nbt">') : html.find('</table>')]
-#print (table)
-#<tr onmouseout="this.style.background=''" onmouseover="this.style.background='#fff7d8'">
-#<tr \r\n\t\t                  onmouseout=
-tmp = table.split('<tr \r\n\t\t                  onmouseout=',1)
-#print(tmp)
-#print(len(tmp))
-trs = tmp[1]
-tr = trs[: trs.find('</tr>')]
-#print(tr)
-number = tr.split('<td   >')[1].split('</td>')[0]
-#print number + '期开奖号码:'
-print number +'qikaijianghaoma:',
-redtmp = tr.split('<td  class="redColor sz12" >')
-reds = redtmp[1:len(redtmp)-1]#去掉第一个和最后一个没用的元素
-#print(reds)
-for redstr in reds:
-    print redstr.split('</td>')[0], 
-#print '蓝球:'
-print 'lanqiu:',
-blue = tr.split('<td  class="blueColor sz12" >')[1].split('</td>')[0]
-print blue
+def getResult():
+    #url = http://zst.aicai.com/ssq/openInfo/
+    #最终输出结果格式如：2015075期开奖号码：6,11,13,19,21,32, 蓝球：4
+    html = getHtml("http://zst.aicai.com/ssq/openInfo/")
+    #<table class="fzTab nbt"> </table>
+    
+    table = html[html.find('<table class="fzTab nbt">') : html.find('</table>')]
+    #print (table)
+    #<tr onmouseout="this.style.background=''" onmouseover="this.style.background='#fff7d8'">
+    #<tr \r\n\t\t                  onmouseout=
+    tmp = table.split('<tr \r\n\t\t                  onmouseout=',1)
+    #print(tmp)
+    #print(len(tmp))
+    trs = tmp[1]
+    tr = trs[: trs.find('</tr>')]
+    #print(tr)
+    number = tr.split('<td   >')[1].split('</td>')[0]
+    data_ = tr.split('<td   >')[2].split('</td>')[0]
+
+    redtmp = tr.split('<td  class="redColor sz12" >')
+    reds = redtmp[1:len(redtmp)-1]#去掉第一个和最后一个没用的元素
+    #print(reds)
+    arr=[]
+    for redstr in reds:
+        arr.append(redstr.split('</td>')[0])
+    blue = tr.split('<td  class="blueColor sz12" >')[1].split('</td>')[0]
+    return ( number,",".join(arr)+"|"+blue,data_)
+    
+    
+    
+def refresh():
+    (qici,result,data_)=getResult()
+    print qici,result,data_
+    date_ = time.strftime("%Y-%m-%d", time.localtime()) 
+    if  not os.path.exists("/Users/gaominghui/git/jiang_log/"+date_):
+        os.mkdir("/Users/gaominghui/git/jiang_log/"+date_)
+    f = open("/Users/gaominghui/git/jiang_log/"+date_+"/log.txt",'w')
+    f.close()
+    count =0
+    data=xlrd.open_workbook("/Users/gaominghui/git/jiang/history.xls",'r')
+    out = xlwt.Workbook();
+    sheet = out.add_sheet(date_, cell_overwrite_ok=True)
+    sheet.write(0,0,qici)
+    sheet.write(0,1,result)
+    sheet.write(0,2,data_)
+    
+    table = data.sheets()[0]
+    nrows=table.nrows
+    count=0;
+    for i in range(nrows):
+        #print table.cell(0,0).value
+        sheet.write(i+1,0,str(int(table.cell(i,0).value)))
+        sheet.write(i+1,1,str(table.cell(i,1).value))
+        sheet.write(i+1,2,str(table.cell(i,2).value))
+    out.save("/Users/gaominghui/git/jiang/history_"+date_+".xls")
+    os.remove("/Users/gaominghui/git/jiang/history_bak.xls")
+    os.rename("/Users/gaominghui/git/jiang/history.xls", "/Users/gaominghui/git/jiang/history_bak.xls")
+    os.rename("/Users/gaominghui/git/jiang/history_"+date_+".xls","/Users/gaominghui/git/jiang/history.xls")
+    
+    
+if __name__ =='__main__':
+    refresh()
+    print "done"
+    
