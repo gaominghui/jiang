@@ -64,10 +64,10 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data and j ==epochs-1:
-                print "Epoch {0}: {1} / {2}".format(
-#                    j, self.evaluate_gao(test_data), n_test)
-                    j, self.evaluate_gao(test_data,mini_batch_size,eta), n_test)
-
+               count =  evaluate_gao(test_data,mini_batch_size,eta)
+               f.write("Epoch {0}: {1} / {2}".format(j,count,n_test))
+               f.flush()
+               f.close()
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
