@@ -56,6 +56,7 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
         if test_data: n_test = len(test_data)
+        f = open("/Users/gaominghui/git/jiang_log/"+self.data_+"/log.txt",'a')
         n = len(training_data)
         for j in xrange(epochs):
             random.shuffle(training_data)
@@ -64,8 +65,8 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data and j ==epochs-1:
-               count =  evaluate_gao(test_data,mini_batch_size,eta)
-               f.write("Epoch {0}: {1} / {2}".format(j,count,n_test))
+               count =  self.evaluate_gao(test_data,mini_batch_size,eta)
+               f.write("Epoch {0}: {1} / {2}\n".format(j,count,n_test))
                f.flush()
                f.close()
     def update_mini_batch(self, mini_batch, eta):

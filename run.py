@@ -16,7 +16,6 @@ for k in range(3,7):
     f = open("/Users/gaominghui/git/jiang_log/"+now_date+"/log.txt",'w')
     f.close()
     
-    for i in range(40,34*k/2,10):
+    for i in range(50,34*k/2,10):
         net = network.Network([34 * k, i, 34],now_date)
-        for  p in range(5,15,5):
-            net.SGD(training_data, 300, p, 1.2, test_data=test_data)
+        net.SGD(training_data, 300, 8, 1.2, test_data=test_data)
